@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { nanoid } from 'nanoid';
 import { GlobalStyle } from 'components/GlobalStyle';
 import { Box } from 'components/Box';
@@ -10,34 +10,33 @@ import { theme } from 'constants';
 
 const LS_CONTACTS_KEY = 'Phonebook-contacts';
 
-export class App extends Component {
-  state = {
-    contacts: [],
-    filter: '',
-  };
+export const App = () => {
+  const [contacts, setContacts] = useState([]);
+  const [filter, setFilter] = useState('');
+  const isFirstRender = useRef(true);
 
   // --------------------------------
-  componentDidMount() {
+  useEffect(() => {
     const lsContacts = JSON.parse(localStorage.getItem(LS_CONTACTS_KEY));
     if (lsContacts) {
-      this.setState({ contacts: lsContacts });
+      setContacts(lsContacts);
     }
-  }
+  }, []);
 
   // --------------------------------
-  componentDidUpdate(prevProps, prevState) {
-    if (prevState.contacts !== this.state.contacts) {
-      localStorage.setItem(
-        LS_CONTACTS_KEY,
-        JSON.stringify(this.state.contacts)
-      );
+  useEffect(() => {
+    console.log(isFirstRender);
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
     }
-  }
+    localStorage.setItem(LS_CONTACTS_KEY, JSON.stringify(contacts));
+  }, [contacts]);
 
   // --------------------------------
-  addContact = ({ name, number }) => {
+  const addContact = ({ name, number }) => {
     const seekingName = name.toLowerCase().trim();
-    const foundName = this.state.contacts.find(
+    const foundName = contacts.find(
       contact => contact.name.toLowerCase().trim() === seekingName
     );
 
@@ -51,62 +50,53 @@ export class App extends Component {
       number: number.trim(),
     };
 
-    this.setState(prevState => ({
-      contacts: [...prevState.contacts, newContact],
-    }));
+    setContacts([...contacts, newContact]);
   };
 
   // --------------------------------
-  deleteContact = id => {
-    this.setState(prevState => {
-      const contacts = prevState.contacts.filter(contact => contact.id !== id);
-      return { contacts };
-    });
+  const deleteContact = id => {
+    setContacts(contacts.filter(contact => contact.id !== id));
   };
 
   // --------------------------------
-  handleChangeFilter = e => {
+  const handleChangeFilter = e => {
     const filter = e.target.value.toLowerCase();
-    this.setState({ filter });
+    setFilter(filter);
   };
 
   // --------------------------------
-  getFilteredContacts = () => {
-    let { contacts, filter } = this.state;
-    filter = filter.trim();
-    return filter
-      ? contacts.filter(contact => contact.name.toLowerCase().includes(filter))
+  const getFilteredContacts = () => {
+    let filterTrimed = filter.trim();
+    return filterTrimed
+      ? contacts.filter(contact =>
+          contact.name.toLowerCase().includes(filterTrimed)
+        )
       : contacts;
   };
 
   // --------------------------------
-  render() {
-    return (
-      <Box
-        display="flex"
-        flexWrap="wrap"
-        flexDirection="column"
-        justifyContent="center"
-        alignItems="flex-start"
-        padding={6}
-      >
-        <Section title="Phonebook" bgColor={theme.colors.bgLight}>
-          <ContactForm addContact={this.addContact} />
-        </Section>
+  return (
+    <Box
+      display="flex"
+      flexWrap="wrap"
+      flexDirection="column"
+      justifyContent="center"
+      alignItems="flex-start"
+      padding={6}
+    >
+      <Section title="Phonebook" bgColor={theme.colors.bgLight}>
+        <ContactForm addContact={addContact} />
+      </Section>
 
-        <Section title="Contacts" bgColor={theme.colors.bgPrimary}>
-          <Filter
-            handleChangeFilter={this.handleChangeFilter}
-            filterValue={this.state.filter}
-          />
-          <ContactList
-            filteredContacts={this.getFilteredContacts()}
-            deleteContact={this.deleteContact}
-          />
-        </Section>
+      <Section title="Contacts" bgColor={theme.colors.bgPrimary}>
+        <Filter handleChangeFilter={handleChangeFilter} filterValue={filter} />
+        <ContactList
+          filteredContacts={getFilteredContacts()}
+          deleteContact={deleteContact}
+        />
+      </Section>
 
-        <GlobalStyle />
-      </Box>
-    );
-  }
-}
+      <GlobalStyle />
+    </Box>
+  );
+};
