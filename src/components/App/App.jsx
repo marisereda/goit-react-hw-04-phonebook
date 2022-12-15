@@ -25,7 +25,6 @@ export const App = () => {
 
   // --------------------------------
   useEffect(() => {
-    console.log(isFirstRender);
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
