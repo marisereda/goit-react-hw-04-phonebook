@@ -15,7 +15,7 @@ export const App = () => {
   const [filter, setFilter] = useState('');
   const isFirstRender = useRef(true);
 
-  // --------------------------------
+  // -------------- Initial loading contacts from LocalStorage ------------------
   useEffect(() => {
     const lsContacts = JSON.parse(localStorage.getItem(LS_CONTACTS_KEY));
     if (lsContacts) {
@@ -23,7 +23,7 @@ export const App = () => {
     }
   }, []);
 
-  // --------------------------------
+  // -------------- save contacts to LocalStorage ------------------
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
@@ -35,11 +35,11 @@ export const App = () => {
   // --------------------------------
   const addContact = ({ name, number }) => {
     const seekingName = name.toLowerCase().trim();
-    const foundName = contacts.find(
+    const foundContact = contacts.find(
       contact => contact.name.toLowerCase().trim() === seekingName
     );
 
-    if (foundName) {
+    if (foundContact) {
       return alert(`${name} is already in contacts`);
     }
 
@@ -49,12 +49,14 @@ export const App = () => {
       number: number.trim(),
     };
 
-    setContacts([...contacts, newContact]);
+    setContacts(prevContacts => [...prevContacts, newContact]);
   };
 
   // --------------------------------
   const deleteContact = id => {
-    setContacts(contacts.filter(contact => contact.id !== id));
+    setContacts(prevContacts =>
+      prevContacts.filter(contact => contact.id !== id)
+    );
   };
 
   // --------------------------------
